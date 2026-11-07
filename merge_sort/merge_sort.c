@@ -17,9 +17,12 @@ void sort_leaf(int *n) {
 
 void merge_comm(int *result, int *my_part, int sub_rank, MPI_Comm sub_comm) {
     int buffer[2];
-    printf("merge_comm: my sub_rank %d, my part: %d, %d", sub_rank, my_part[0], my_part[1]);
+    printf("merge_comm: my sub_rank %d, my part: %d, %d\n", sub_rank, my_part[0], my_part[1]);
+    fflush(stdout);
     if (sub_rank == 1) {
         MPI_Bcast(my_part, 2, MPI_INT, 1, sub_comm);
+        printf("sent!\n");
+        fflush(stdout);
     }
     else {
         MPI_Bcast(buffer, 2, MPI_INT, 1, sub_comm);
@@ -40,6 +43,10 @@ void merge_comm(int *result, int *my_part, int sub_rank, MPI_Comm sub_comm) {
                     buffer_idx++;
                 }
             }
+            else {
+                result[my_part_idx + buffer_idx] = mp;
+                my_part_idx++;
+            }
         }
         while (buffer_idx < 2) {
             result[my_part_idx + buffer_idx] = buffer[buffer_idx++];
@@ -48,13 +55,23 @@ void merge_comm(int *result, int *my_part, int sub_rank, MPI_Comm sub_comm) {
     }
 }
 
-void last_merge() {
-
+void last_merge(int *result, int world_rank, int sub_rank) {
+    if (world_rank == 1 || sub_rank == 0) {
+        MPI_Group
+        MPI_Comm_create()
+    }
+    if (world_rank == 1) {
+        MPI_Gather()
+    }
+    if (sub_rank == 0) {
+        MPI_Gather()
+    }
 }
 
 void merge(int *result, int *scattered, int world_rank, int sub_rank, MPI_Comm sub_comm) {
     sort_leaf(scattered);
     merge_comm(result, scattered, sub_rank, sub_comm);
+    last_merge(result, world_rank, sub_rank);
 }
 
 void set_randoms_12(int *randoms) {
@@ -98,8 +115,8 @@ int main(void) {
     MPI_Comm_get_name(sub_comm, comm_name, &name_len);
     comm_name[name_len] = '\0';
 
-    printf("my world rank: %d of %d, my color: %d, my sub_rank: %d of %d, my comm name: %s\n My scattered: %d | %d\n",
-        world_rank, world_size, color, sub_rank, sub_size, comm_name, scattered[0], scattered[1]);
+    // printf("my world rank: %d of %d, my color: %d, my sub_rank: %d of %d, my comm name: %s\n My scattered: %d | %d\n",
+    //     world_rank, world_size, color, sub_rank, sub_size, comm_name, scattered[0], scattered[1]);
 
     merge(randoms, scattered, world_rank, sub_rank, sub_comm);
 
